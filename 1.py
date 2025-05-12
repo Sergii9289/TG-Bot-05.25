@@ -1,2 +1,3 @@
 import aiogram
 
+print('kfdjbskfjvb')
