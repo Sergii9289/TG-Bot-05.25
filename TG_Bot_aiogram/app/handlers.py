@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart
 
 import app.keyboards as kb
@@ -8,8 +8,8 @@ import app.text as textfile
 from app.main_API import PrivatAPI, MonoAPI
 from gpt import chat_gpt_service
 
-import random
 import os
+from app.utils import make_random_prompt
 
 router = Router()
 
@@ -20,19 +20,23 @@ async def random_ai(callback: CallbackQuery):
 
     # Запит до GPT
     prompt = "Ти AI-асистент, що допомагає користувачам."
-    print(os.getcwd())  # Виведе поточну папку запуску
-    with open('app/resources/prompts/message_random.txt', 'r', encoding='utf-8') as file:
-        prompts = file.read().splitlines()  # Отримуємо список рядків
-        user_message = random.choice(prompts)
+
+    image_url, user_message = make_random_prompt()
+
+    # image_url = 'app/resources/images/1_cat.jpg'
+    # image_url = make_random_prompt()['image_url']
+    image = FSInputFile(image_url)
 
     # Виводимо питання користувачу перед відправкою в ШІ
-    await callback.message.answer(f"🔹 **Запит у ШІ:**\n{user_message}")
+    await callback.message.answer_photo(photo=image, caption=f"Спитаємо у ШІ:\n{user_message}")
 
     # Викликаємо GPT без зайвого аргументу
-    answer = await chat_gpt_service.send_question(prompt, user_message)
+    # answer = await chat_gpt_service.send_question(prompt, user_message)
 
     # Відправка відповіді користувачу
-    await callback.message.answer(answer)
+    # await callback.message.answer(answer)
+
+    await callback.message.answer('Наші подальші дії:', reply_markup=kb.random_menu)
 
 
 @router.message(CommandStart())  # перша функція після входу в бот /start
@@ -42,64 +46,33 @@ async def cmd_start(message: Message):
                          reply_markup=kb.menu)
 
 
-@router.message(F.text == "меню")
-async def menu(message: Message):
-    await message.answer(textfile.menu, reply_markup=kb.menu)
+@router.callback_query(F.data == "menu")
+async def menu_callback(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.edit_text("Оберіть дію:", reply_markup=kb.menu)
 
 
-@router.callback_query(F.data == "privat")
-async def privat_info(callback: CallbackQuery):
-    await callback.message.answer('Оберіть валюту:', reply_markup=kb.privat_menu)
 
-
-@router.callback_query(F.data == "mono")
-async def mono_info(callback: CallbackQuery):
-    await callback.message.answer('Оберіть валюту:', reply_markup=kb.mono_menu)
-
-
-@router.callback_query(F.data == "privat_USD")
-async def privat_cur_usd(callback: CallbackQuery):
-    curr_privat = PrivatAPI('PrivatBank', '', 'https://api.privatbank.ua/p24api/pubinfo?exchange&coursid=5')
-    exchange_data = await curr_privat.get_currency('USD', 'UAH')
-
-    if exchange_data:
-        await callback.message.answer(f'Курс валют: {exchange_data}')
-    else:
-        await callback.message.answer("Не вдалося отримати курс валют.")
-    await callback.answer()  # Закриваємо "вантаження" кнопки
-
-
-@router.callback_query(F.data == "privat_EUR")
-async def privat_cur_eur(callback: CallbackQuery):
-    curr_privat = PrivatAPI('PrivatBank', '', 'https://api.privatbank.ua/p24api/pubinfo?exchange&coursid=5')
-    exchange_data = await curr_privat.get_currency('EUR', 'UAH')
-
-    if exchange_data:
-        await callback.message.answer(f'Курс валют: {exchange_data}')
-    else:
-        await callback.message.answer("Не вдалося отримати курс валют.")
-    await callback.answer()  # Закриваємо "вантаження" кнопки
-
-
-@router.callback_query(F.data == "mono_EUR")
-async def mono_cur_eur(callback: CallbackQuery):
-    curr_mono = MonoAPI('Monobank', '', 'https://api.monobank.ua/bank/currency')
-    exchange_data = await curr_mono.get_currency('EUR', 'UAH')
-
-    if exchange_data:
-        await callback.message.answer(f'Курс валют: {exchange_data}')
-    else:
-        await callback.message.answer("Не вдалося отримати курс валют.")
-    await callback.answer()  # Закриваємо "вантаження" кнопки
-
-
-@router.callback_query(F.data == "mono_USD")
-async def mono_cur_usd(callback: CallbackQuery):
-    curr_mono = MonoAPI('Monobank', '', 'https://api.monobank.ua/bank/currency')
-    exchange_data = await curr_mono.get_currency('USD', 'UAH')
-
-    if exchange_data:
-        await callback.message.answer(f'Курс валют: {exchange_data}')
-    else:
-        await callback.message.answer("Не вдалося отримати курс валют.")
-    await callback.answer()  # Закриваємо "вантаження" кнопки
+# @router.callback_query(F.data == "random")
+# async def random_ai_image(callback: CallbackQuery):
+#     await callback.answer()  # Підтверджуємо натискання кнопки
+#
+#     # Запит до GPT
+#     prompt = "Ти AI-асистент, що допомагає користувачам."
+#     print(os.getcwd())  # Виведе поточну папку запуску
+#     # Читаємо текстовий файл з промптами
+#     with open('app/resources/prompts/message_random.txt', 'r', encoding='utf-8') as file:
+#         prompts = file.read().splitlines()  # Отримуємо список рядків
+#         line = prompts[0]
+#         user_message = line
+#     # Читаємо зображення
+#     image_path = 'app/resources/images/1_cat.jpg'
+#
+#     # Виводимо питання користувачу перед відправкою в ШІ
+#     await callback.message.answer(f"🔹 **Запит у ШІ:**\n{user_message}")
+#
+#     # Викликаємо GPT без зайвого аргументу
+#     answer = await chat_gpt_service.send_question_with_image(prompt, user_message, image_path)
+#
+#     # Відправка відповіді користувачу
+#     await callback.message.answer(answer)

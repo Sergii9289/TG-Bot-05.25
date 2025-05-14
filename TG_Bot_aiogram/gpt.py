@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-
+import base64
 import openai
 import httpx
 
@@ -25,6 +25,25 @@ class ChatGptService:
             model="gpt-4o", messages=self.message_list, max_tokens=300, temperature=0.9
         )
         return completion.choices[0].message.content
+
+    async def send_question_with_image(self, prompt_text: str, message_text: str, image_path: str) -> str:
+        with open(image_path, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read()).decode("utf-8")  # Кодую у Base64
+
+        completion = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": prompt_text},
+                {"role": "user", "content": message_text},
+                {"role": "user", "content": f"![Image](data:image/jpeg;base64,{encoded_image})"}
+                # Передача зображення у правильному форматі
+            ],
+            max_tokens=300,
+            temperature=0.9
+        )
+
+        return completion.choices[0].message.content
+
 
 # Ініціалізація GPT сервісу
 chat_gpt_service = ChatGptService(AI_TOKEN)

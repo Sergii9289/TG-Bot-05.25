@@ -3,18 +3,12 @@ from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
 
 menu = [
     [InlineKeyboardButton(text="Рандомне повідомлення", callback_data="random"),
-     InlineKeyboardButton(text="Курс валют MonoBank", callback_data="mono")],
+     InlineKeyboardButton(text="Головне меню", callback_data="menu")],
 ]
 
 menu = InlineKeyboardMarkup(inline_keyboard=menu)
 
-privat_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="Курс EUR > UAH Приват Банк", callback_data="privat_EUR"),
-     InlineKeyboardButton(text="Курс USD > UAH Приват Банк", callback_data="privat_USD")]
+random_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Хочу ще факт", callback_data="random"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
 ])
-
-mono_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="Курс EUR > UAH Monobank", callback_data="mono_EUR"),
-     InlineKeyboardButton(text="Курс USD > UAH Monobank", callback_data="mono_USD")]
-])
-
