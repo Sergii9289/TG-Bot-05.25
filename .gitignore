@@ -1,0 +1,3 @@
+/.venv/
+/TG_Bot_aiogram/config.env
+/TG_Bot_aiogram/db.sqlite3
