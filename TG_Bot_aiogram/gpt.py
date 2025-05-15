@@ -22,7 +22,7 @@ class ChatGptService:
         self.message_list.append({"role": "user", "content": message_text})
 
         completion = self.client.chat.completions.create(
-            model="gpt-4o", messages=self.message_list, max_tokens=300, temperature=0.9
+            model="gpt-4o", messages=self.message_list, max_tokens=200, temperature=0.7
         )
         return completion.choices[0].message.content
 
