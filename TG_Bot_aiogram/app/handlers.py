@@ -1,16 +1,33 @@
-from aiogram import F, Router
+from aiogram import F, Router, types
 from aiogram.types import Message, CallbackQuery, FSInputFile, ForceReply
 from aiogram.filters import CommandStart
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 import app.keyboards as kb
 import app.database.requests as rq
 import app.text as textfile
 from gpt import chat_gpt_service
-from app.utils import random_fact, talk_person
+from app.utils import random_fact, talk_person, quiz_prompt
 
 router = Router()
 
 talk_with_pers = {}
+
+
+class QuizState(StatesGroup):
+    waiting_for_answer_quiz = State()
+
+
+class GptState(StatesGroup):
+    waiting_for_answer_gpt = State()
+
+@router.message(CommandStart())  # перша функція після входу в бот /start
+async def cmd_start(message: Message):
+    await rq.set_user(message.from_user.id)  # передаємо user.id для перевірки існування user
+    await message.answer(textfile.greet.format(name=message.from_user.full_name),
+                         reply_markup=kb.menu)
+
 
 @router.callback_query(F.data == "random")
 async def random_ai(callback: CallbackQuery):
@@ -29,7 +46,7 @@ async def random_ai(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "gpt")
-async def chat_gpt_interface(callback: CallbackQuery):
+async def chat_gpt_interface(callback: CallbackQuery, state: FSMContext):
     await callback.answer()  # Підтверджуємо натискання кнопки
     global talk_with_pers
     talk_with_pers = {}
@@ -37,15 +54,21 @@ async def chat_gpt_interface(callback: CallbackQuery):
     # Надсилаємо зображення
     await callback.message.answer_photo(photo=image, caption="Запит до ChatGPT...")
     await callback.message.answer("Введіть ваше повідомлення для ChatGPT або stop:", reply_markup=ForceReply())
+    # Встановлюємо стан для очікування відповіді користувача
+    await state.set_state(GptState.waiting_for_answer_gpt)
+    current_state = await state.get_state()
+    print(f"Стан встановлено: {current_state}")
 
 
 @router.callback_query(F.data == "gpt_next")
-async def chat_gpt_interface_next(callback: CallbackQuery):
+async def chat_gpt_interface_next(callback: CallbackQuery, state: FSMContext):
     await callback.answer()  # Підтверджуємо натискання кнопки
     await callback.message.answer("Введіть ваше повідомлення для ChatGPT або stop:", reply_markup=ForceReply())
+    # Повторно встановлюємо стан для отримання нової відповіді
+    await state.set_state(GptState.waiting_for_answer_gpt)
 
 
-@router.message(F.reply_to_message)
+@router.message(F.text, GptState.waiting_for_answer_gpt)
 async def process_user_message(message: Message):
     # Переконуємось, що повідомлення є відповіддю на запит "Введіть ваше повідомлення..."
     if not message.reply_to_message or "Введіть ваше повідомлення для ChatGPT або stop:" not in message.reply_to_message.text:
@@ -64,20 +87,72 @@ async def process_user_message(message: Message):
 
 
 @router.callback_query(F.data == "talk")
-async def talk(callback: CallbackQuery):
+async def talk(callback: CallbackQuery, state: FSMContext):
     await callback.answer()  # Підтверджуємо натискання кнопки
     image = FSInputFile('app/resources/images/talk_logo.png')  # Підготовлене зображення
     # Надсилаємо зображення
     await callback.message.answer_photo(photo=image)
     await callback.message.answer('Оберіть з ким спілкуватись:', reply_markup=kb.talk_keyboard)
+    # Встановлюємо стан для очікування відповіді користувача
+    await state.set_state(GptState.waiting_for_answer_gpt)
+    current_state = await state.get_state()
+    print(f"Стан встановлено: {current_state}")
 
 
-@router.message(CommandStart())  # перша функція після входу в бот /start
-async def cmd_start(message: Message):
-    await rq.set_user(message.from_user.id)  # передаємо user.id для перевірки існування user
-    await message.answer(textfile.greet.format(name=message.from_user.full_name),
-                         reply_markup=kb.menu)
+@router.callback_query(F.data == "quiz")
+async def quiz(callback: CallbackQuery):
+    await callback.answer()  # Підтверджуємо натискання кнопки
+    image = FSInputFile('app/resources/images/quiz_logo.png')  # Підготовлене зображення
+    # Надсилаємо зображення
+    await callback.message.answer_photo(photo=image)
+    await callback.message.answer('Оберіть тему:', reply_markup=kb.quiz_menu)
 
+
+
+@router.callback_query(F.data.startswith("quiz_handler"))
+async def quiz(callback: CallbackQuery, state: FSMContext):
+    _, topic = callback.data.split(":")  # Отримуємо тему
+
+    await callback.message.answer(f"Ви обрали тему: {topic.capitalize()}")
+    await callback.answer()
+
+    prompt = quiz_prompt(topic)
+    print(prompt)
+    question = await chat_gpt_service.send_question(prompt, "")
+
+    await callback.message.answer(f"Ось ваше запитання:\n\n{question}", reply_markup=ForceReply())
+
+    # Зберігаємо запитання у стані
+    await state.update_data(question=question)
+    await state.set_state(QuizState.waiting_for_answer_quiz)
+    current_state = await state.get_state()
+    print(f"Поточний стан: {current_state}")
+
+
+@router.message(F.text, QuizState.waiting_for_answer_quiz)
+async def quiz_user_answer(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    print(f"Стан при отриманні відповіді: {current_state}")  # Перевірка стану
+
+    # Отримуємо збережене запитання
+    user_data = await state.get_data()
+    question = user_data.get("question", "Запитання не знайдено.")
+    user_answer = message.text
+
+    print(f"Запитання: {question}")
+    print(f"Відповідь користувача: {user_answer}")
+
+    # Передаємо **і запитання, і відповідь** в ChatGPT
+    feedback = await chat_gpt_service.send_question(
+        f"Оціни відповідь користувача на запитання квізу: \"{question}\". Чи правильна вона? Дай пояснення.",
+        user_answer
+    )
+
+    await message.answer(f"Оцінка вашої відповіді:\n\n{feedback}")
+
+    # Скидаємо стан після отримання відповіді
+    await state.clear()
+    await message.answer('Що хочеш зробити далі?', reply_markup=kb.quiz_next_menu)
 
 @router.callback_query(F.data == "menu")
 async def menu_callback(callback: CallbackQuery):
