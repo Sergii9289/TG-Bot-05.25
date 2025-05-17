@@ -22,6 +22,11 @@ class QuizState(StatesGroup):
 class GptState(StatesGroup):
     waiting_for_answer_gpt = State()
 
+
+class TranslateState(StatesGroup):
+    waiting_for_text = State()
+
+
 @router.message(CommandStart())  # перша функція після входу в бот /start
 async def cmd_start(message: Message):
     await rq.set_user(message.from_user.id)  # передаємо user.id для перевірки існування user
@@ -108,9 +113,8 @@ async def quiz(callback: CallbackQuery):
     await callback.message.answer('Оберіть тему:', reply_markup=kb.quiz_menu)
 
 
-
 @router.callback_query(F.data.startswith("quiz_handler"))
-async def quiz(callback: CallbackQuery, state: FSMContext):
+async def quiz_handler(callback: CallbackQuery, state: FSMContext):
     _, topic = callback.data.split(":")  # Отримуємо тему
 
     await callback.message.answer(f"Ви обрали тему: {topic.capitalize()}")
@@ -153,6 +157,51 @@ async def quiz_user_answer(message: types.Message, state: FSMContext):
     # Скидаємо стан після отримання відповіді
     await state.clear()
     await message.answer('Що хочеш зробити далі?', reply_markup=kb.quiz_next_menu)
+
+
+@router.callback_query(F.data == "translate")
+async def menu_callback(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.edit_text("Оберіть мову, на яку перекласти:", reply_markup=kb.translate_menu)
+
+
+@router.callback_query(F.data.startswith("translate_handler"))
+async def translate_handler(callback: CallbackQuery, state: FSMContext):
+    _, topic = callback.data.split(":")  # Отримуємо мову перекладу
+    print(topic)
+
+    await callback.message.answer(f"Перекласти на мову: {topic.capitalize()}")
+    await callback.answer()
+
+    # Зберігаємо тему перекладу в стані
+    await state.update_data(target_language=topic)
+
+    # Запитуємо текст для перекладу
+    await callback.message.answer("Введіть текст для перекладу:", reply_markup=ForceReply())
+
+    # Встановлюємо стан очікування введення тексту
+    await state.set_state(TranslateState.waiting_for_text)
+
+
+@router.message(F.text, TranslateState.waiting_for_text)
+async def process_translation(message: Message, state: FSMContext):
+    user_data = await state.get_data()
+    target_language = user_data.get("target_language", "українська")
+
+    user_text = message.text.strip()
+    print(f"Перекладаємо текст '{user_text}' на '{target_language}'")
+
+    # Формуємо промпт для AI
+    prompt = f"Переклади наступний текст на {target_language}: {user_text}"
+
+    response = await chat_gpt_service.send_question(prompt, "")
+
+    await message.answer(f"Переклад:\n\n{response}")
+
+    # Очищаємо стан після перекладу
+    await state.clear()
+    await message.answer('Що хочеш зробити далі?', reply_markup=kb.translate_next_menu)
+
 
 @router.callback_query(F.data == "menu")
 async def menu_callback(callback: CallbackQuery):

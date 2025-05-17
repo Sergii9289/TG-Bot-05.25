@@ -7,9 +7,10 @@ menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="ChatGPT інтерфейс", callback_data="gpt")],
     [InlineKeyboardButton(text="Діалог з відомою особистістю", callback_data="talk")],
     [InlineKeyboardButton(text="Вікторина", callback_data="quiz")],
+    [InlineKeyboardButton(text="Перекладач", callback_data="translate")],
 ])
 
-# ----------------------------------------------------------------------------
+# ----------------------------------talk------------------------------------------
 personalities = talk_person()
 
 # Отримуємо список кнопок talk
@@ -21,7 +22,7 @@ buttons = [
 # Передаємо список кнопок у клавіатуру
 talk_keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
-# -------------------------------------------------------------------------------------
+# ------------------------------------quiz-------------------------------------------------
 # Отримуємо список кнопок quiz
 quiz_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Наука", callback_data="quiz_handler:наука"),
@@ -31,7 +32,17 @@ quiz_menu = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
-# -------------------------------------------------------------------------------------
+# -------------------------------------translate------------------------------------------------
+
+# Отримуємо список кнопок translate
+translate_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="English", callback_data="translate_handler:english"),
+    InlineKeyboardButton(text="Spain", callback_data="translate_handler:spain"),
+    InlineKeyboardButton(text="Deutsch", callback_data="translate_handler:deutsch"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
+
+# ----------------------------------------------------------------------------------------------
 
 random_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Хочу ще факт", callback_data="random"),
@@ -48,6 +59,10 @@ quiz_next_menu = InlineKeyboardMarkup(inline_keyboard=[
      InlineKeyboardButton(text="Закінчити", callback_data="menu")]
 ])
 
+translate_next_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Перекласти ще...", callback_data="translate"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
 
 
 
