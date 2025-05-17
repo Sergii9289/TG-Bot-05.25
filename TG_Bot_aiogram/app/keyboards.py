@@ -8,7 +8,8 @@ menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Діалог з відомою особистістю", callback_data="talk")],
     [InlineKeyboardButton(text="Вікторина", callback_data="quiz")],
     [InlineKeyboardButton(text="Перекладач", callback_data="translate")],
-    [InlineKeyboardButton(text="Голосовий ввод", callback_data="start_voice_input")],
+    [InlineKeyboardButton(text="Рекомендації щодо фільмів, музики та книг", callback_data="recomendations")],
+    # [InlineKeyboardButton(text="Голосовий ввод", callback_data="start_voice_input")],
 ])
 
 # ----------------------------------talk------------------------------------------
@@ -43,6 +44,34 @@ translate_menu = InlineKeyboardMarkup(inline_keyboard=[
      InlineKeyboardButton(text="Закінчити", callback_data="menu")]
 ])
 
+# ------------------------------------recomend_menu---------------------------------------------
+recomend_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Фільми", callback_data="recomendations_handler:movies"),
+    InlineKeyboardButton(text="Книги", callback_data="recomendations_handler:books"),
+    InlineKeyboardButton(text="Музика", callback_data="recomendations_handler:music"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
+
+recomend_movies_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Фантастика", callback_data="recomend_movies_handler:fiction"),
+    InlineKeyboardButton(text="Жахи", callback_data="recomend_movies_handler:horror"),
+    InlineKeyboardButton(text="Комедії", callback_data="recomend_movies_handler:comedy"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
+
+recomend_books_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Фантастика", callback_data="recomend_books_handler:fiction"),
+    InlineKeyboardButton(text="Кримінал", callback_data="recomend_books_handler:criminal"),
+    InlineKeyboardButton(text="Детектив", callback_data="recomend_books_handler:detective"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
+
+recomend_music_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Rock", callback_data="recomend_music_handler:rock"),
+    InlineKeyboardButton(text="Pop", callback_data="recomend_music_handler:pop"),
+    InlineKeyboardButton(text="Country", callback_data="recomend_music_handler:country"),
+     InlineKeyboardButton(text="Закінчити", callback_data="menu")]
+])
 # ----------------------------------------------------------------------------------------------
 
 random_menu = InlineKeyboardMarkup(inline_keyboard=[

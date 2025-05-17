@@ -6,3 +6,5 @@ PIP install
 * aiohttp
 * openai
 * gtts
+* sqlalchemy
+* aiosqlite
