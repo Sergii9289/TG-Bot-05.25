@@ -1,4 +1,23 @@
 import random
+import openai
+import gtts
+from io import BytesIO
+
+async def convert_text_to_speech(text):
+    tts = gtts.gTTS(text, lang="uk")  # Синтезуємо українську мову
+    audio_file = BytesIO()
+    tts.write_to_fp(audio_file)
+    audio_file.seek(0)  # Переміщаємо курсор у початок
+
+    return audio_file
+
+async def convert_speech_to_text(voice_file):
+    response = openai.Audio.transcriptions.create(
+        file=voice_file,
+        model="whisper-1"
+    )
+    return response["text"]
+
 
 
 def random_fact():

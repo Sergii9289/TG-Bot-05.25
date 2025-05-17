@@ -5,3 +5,4 @@ PIP install
 * dotenv
 * aiohttp
 * openai
+* gtts

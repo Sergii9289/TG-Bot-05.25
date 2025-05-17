@@ -1,14 +1,15 @@
 from aiogram import F, Router, types
-from aiogram.types import Message, CallbackQuery, FSInputFile, ForceReply
+from aiogram.types import Message, CallbackQuery, FSInputFile, ForceReply, Voice
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.filters.state import StateFilter
 
 import app.keyboards as kb
 import app.database.requests as rq
 import app.text as textfile
 from gpt import chat_gpt_service
-from app.utils import random_fact, talk_person, quiz_prompt
+from app.utils import random_fact, talk_person, quiz_prompt, convert_speech_to_text, convert_text_to_speech
 
 router = Router()
 
@@ -25,6 +26,10 @@ class GptState(StatesGroup):
 
 class TranslateState(StatesGroup):
     waiting_for_text = State()
+
+
+class VoiceInputState(StatesGroup):
+    waiting_for_voice = State()
 
 
 @router.message(CommandStart())  # перша функція після входу в бот /start
@@ -201,6 +206,40 @@ async def process_translation(message: Message, state: FSMContext):
     # Очищаємо стан після перекладу
     await state.clear()
     await message.answer('Що хочеш зробити далі?', reply_markup=kb.translate_next_menu)
+
+
+@router.callback_query(F.data == "start_voice_input")
+async def start_voice_input(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()  # Підтверджуємо натискання кнопки
+    await callback.message.answer("Надішліть голосове повідомлення 🎤")
+
+    # Встановлюємо стан очікування голосового повідомлення
+    await state.set_state(VoiceInputState.waiting_for_voice)
+    print(f"Стан після встановлення: {await state.get_state()}")
+
+@router.message(F.voice, StateFilter(VoiceInputState.waiting_for_voice))
+async def process_voice_message(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    print(f"Стан перед обробкою: {current_state}")
+
+    voice_file_id = message.voice.file_id
+    file_info = await message.bot.get_file(voice_file_id)
+    file_path = file_info.file_path
+
+    # Завантажуємо голосовий файл
+    voice_file = await message.bot.download_file(file_path)
+
+    # Викликаємо функцію для розпізнавання тексту
+    text = await convert_speech_to_text(voice_file)
+
+    if not text:
+        await message.answer("Не вдалося розпізнати голосове повідомлення. Спробуйте ще раз.")
+        return
+
+    await message.answer(f"Розпізнаний текст:\n{text}")
+
+    # Очищаємо стан після обробки
+    await state.clear()
 
 
 @router.callback_query(F.data == "menu")

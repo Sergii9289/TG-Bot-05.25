@@ -8,6 +8,7 @@ menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Діалог з відомою особистістю", callback_data="talk")],
     [InlineKeyboardButton(text="Вікторина", callback_data="quiz")],
     [InlineKeyboardButton(text="Перекладач", callback_data="translate")],
+    [InlineKeyboardButton(text="Голосовий ввод", callback_data="start_voice_input")],
 ])
 
 # ----------------------------------talk------------------------------------------
