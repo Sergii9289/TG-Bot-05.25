@@ -4,10 +4,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from app.handlers import router
+
 from app.database.models import async_main
 
 from dotenv import load_dotenv
 import os
+
+
 
 
 load_dotenv(dotenv_path='config.env')

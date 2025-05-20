@@ -1,17 +1,18 @@
 from aiogram import F, Router, types
+from app.handlers.start import router as start_router
 from aiogram.types import Message, CallbackQuery, FSInputFile, ForceReply, Voice
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters.state import StateFilter
 
 import app.keyboards as kb
 import app.database.requests as rq
-import app.text as textfile
 from gpt import chat_gpt_service
 from app.utils import random_fact, talk_person, quiz_prompt, convert_speech_to_text, convert_text_to_speech
 
 router = Router()
+router.include_router(start_router)
+
 
 talk_with_pers = {}
 
@@ -32,11 +33,11 @@ class VoiceInputState(StatesGroup):
     waiting_for_voice = State()
 
 
-@router.message(CommandStart())  # перша функція після входу в бот /start
-async def cmd_start(message: Message):
-    await rq.set_user(message.from_user.id)  # передаємо user.id для перевірки існування user
-    await message.answer(textfile.greet.format(name=message.from_user.full_name),
-                         reply_markup=kb.menu)
+# @router.message(CommandStart())  # перша функція після входу в бот /start
+# async def cmd_start(message: Message):
+#     await rq.set_user(message.from_user.id)  # передаємо user.id для перевірки існування user
+#     await message.answer(textfile.greet.format(name=message.from_user.full_name),
+#                          reply_markup=kb.menu)
 
 
 @router.callback_query(F.data == "random")

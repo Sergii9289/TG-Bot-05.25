@@ -3,6 +3,7 @@ import os
 import base64
 import openai
 import httpx
+from openai import OpenAIError
 
 load_dotenv(dotenv_path='config.env')
 TG_TOKEN = os.getenv('TG_TOKEN')
@@ -21,10 +22,13 @@ class ChatGptService:
         self.message_list.append({"role": "system", "content": prompt_text})
         self.message_list.append({"role": "user", "content": message_text})
 # TODO: Зробити Try!!!
-        completion = self._client.chat.completions.create(
-            model="gpt-4o", messages=self.message_list, max_tokens=200, temperature=0.7
-        )
-        return completion.choices[0].message.content
+        try:
+            completion = self._client.chat.completions.create(
+                model="gpt-4o", messages=self.message_list, max_tokens=200, temperature=0.7
+            )
+            return completion.choices[0].message.content
+        except OpenAIError as e:
+            print(f'Error in: {self.send_question.__name__}. Error is: {e}')
 
     async def send_question_with_image(self, prompt_text: str, message_text: str, image_path: str) -> str:
         with open(image_path, "rb") as image_file:
