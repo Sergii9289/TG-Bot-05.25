@@ -220,6 +220,8 @@ async def start_voice_input(callback: CallbackQuery, state: FSMContext):
     await state.set_state(VoiceInputState.waiting_for_voice)
     print(f"Стан після встановлення: {await state.get_state()}")
 
+# TODO: бібліотека DeepVoice витягує голосове повідомлення
+
 @router.message(F.voice, StateFilter(VoiceInputState.waiting_for_voice))
 async def process_voice_message(message: Message, state: FSMContext):
     current_state = await state.get_state()

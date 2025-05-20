@@ -11,7 +11,7 @@ AI_TOKEN = os.getenv('AI_TOKEN')
 
 class ChatGptService:
     def __init__(self, token):
-        self.client = openai.OpenAI(
+        self._client = openai.OpenAI(
             api_key=AI_TOKEN, http_client=httpx.Client(proxy="http://18.199.183.77:49232")
         )
         self.message_list = []
@@ -20,8 +20,8 @@ class ChatGptService:
         self.message_list.clear()
         self.message_list.append({"role": "system", "content": prompt_text})
         self.message_list.append({"role": "user", "content": message_text})
-
-        completion = self.client.chat.completions.create(
+# TODO: Зробити Try!!!
+        completion = self._client.chat.completions.create(
             model="gpt-4o", messages=self.message_list, max_tokens=200, temperature=0.7
         )
         return completion.choices[0].message.content
@@ -30,7 +30,7 @@ class ChatGptService:
         with open(image_path, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode("utf-8")  # Кодую у Base64
 
-        completion = self.client.chat.completions.create(
+        completion = self._client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": prompt_text},
