@@ -5,13 +5,17 @@ from aiogram.fsm.context import FSMContext
 from app.handlers.states import GptState
 from .talk import reset_talk_with_pers
 
+from ..logger import log_to_file
+import logging
+
 
 router = Router()
 
 
-
 @router.callback_query(F.data == "gpt")
 async def chat_gpt_interface(callback: CallbackQuery, state: FSMContext):
+    log_to_file("chat_gpt_interface")  # Логуємо виклик функції
+    logging.info(f"Користувач {callback.from_user.id} (@{callback.from_user.username}) викликав ChatGPT інтерфейс")
     reset_talk_with_pers()
     await callback.answer()  # Підтверджуємо натискання кнопки
     global talk_with_pers

@@ -4,18 +4,17 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from app.handlers import router
-
 from app.database.models import async_main
 
 from dotenv import load_dotenv
 import os
+import logging
 
+logging.getLogger("aiogram").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-
-
-load_dotenv(dotenv_path='config.env')
+load_dotenv()
 TG_TOKEN = os.getenv('TG_TOKEN')
-
 
 
 async def main():
@@ -25,8 +24,6 @@ async def main():
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)
-
-
 
     await dp.start_polling(bot)
 

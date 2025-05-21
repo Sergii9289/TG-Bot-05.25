@@ -4,15 +4,20 @@ from aiogram.fsm.context import FSMContext
 
 from app.handlers.states import QuizState
 import app.keyboards as kb
+from app.utils import quiz_prompt
+
 from gpt import chat_gpt_service
 
-from app.utils import quiz_prompt
+from ..logger import log_to_file
+import logging
 
 router = Router()
 
 
 @router.callback_query(F.data == "quiz")
 async def quiz(callback: CallbackQuery):
+    log_to_file("QUIZ")  # Логуємо виклик функції
+    logging.info(f"Користувач {callback.from_user.id} (@{callback.from_user.username}) викликав QUIZ")
     await callback.answer()  # Підтверджуємо натискання кнопки
     image = FSInputFile('app/resources/images/quiz_logo.png')  # Підготовлене зображення
     # Надсилаємо зображення
