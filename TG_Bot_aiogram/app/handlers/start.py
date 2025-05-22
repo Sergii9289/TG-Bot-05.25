@@ -9,7 +9,7 @@ router = Router()  # Оголошуємо router в цьому файлі
 
 @router.message(CommandStart())  # перша функція після входу в бот /start
 async def cmd_start(message: Message):
-    await rq.set_user(message.from_user.id)  # Передаємо user.id для перевірки існування user
+    await rq.set_user(message.from_user.id, message.from_user.full_name)  # Передаємо user.id для перевірки існування user
     await message.answer(textfile.greet.format(name=message.from_user.full_name),
                          reply_markup=kb.menu)
 

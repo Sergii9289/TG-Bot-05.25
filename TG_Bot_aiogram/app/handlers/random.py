@@ -5,6 +5,7 @@ from ..utils import random_fact
 from gpt import chat_gpt_service
 
 import app.keyboards as kb
+import app.database.requests as rq
 
 from ..logger import log_to_file
 import logging
@@ -16,6 +17,9 @@ router = Router()
 async def random_ai(callback: CallbackQuery):
     log_to_file("RANDOM")  # Логуємо виклик функції
     logging.info(f"Користувач {callback.from_user.id} (@{callback.from_user.username}) викликав RANDOM")
+
+    await rq.update_user_activity(callback.from_user.id)  # Оновлюємо активність у БД
+
     await callback.answer()  # Підтверджуємо натискання кнопки
     prompt = "Ти AI-асистент, що надає випадкові цікаві факти користувачам."
     fact_prompt = random_fact()  # Генерація промпту для факту

@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.handlers.states import TranslateState
 import app.keyboards as kb
+import app.database.requests as rq
 from gpt import chat_gpt_service
 
 from ..logger import log_to_file
@@ -15,6 +16,9 @@ router = Router()
 async def menu_callback(callback: CallbackQuery):
     log_to_file("TRANSLATE")  # Логуємо виклик функції
     logging.info(f"Користувач {callback.from_user.id} (@{callback.from_user.username}) викликав TRANSLATE")
+
+    await rq.update_user_activity(callback.from_user.id)  # Оновлюємо активність у БД
+
     await callback.answer()
     await callback.message.edit_text("Оберіть мову, на яку перекласти:", reply_markup=kb.translate_menu)
 

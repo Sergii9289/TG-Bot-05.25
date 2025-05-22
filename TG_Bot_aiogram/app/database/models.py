@@ -1,6 +1,8 @@
-from sqlalchemy import BigInteger, String, ForeignKey
+from sqlalchemy import BigInteger, String, DateTime, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+
+from datetime import datetime, timedelta
 
 engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3')
 # створюємо асинхронний движок engine
@@ -15,11 +17,15 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 
 class User(Base):
-    __tablename__ = 'users'  # створюємо таблицю users
+    __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(primary_key=True)  # Mapped використовується для аннотування типів даних у моделях
-    # mapped_column(primary_key=True) вказує на те, що цей стовпець є первинним ключем
-    tg_id = mapped_column(BigInteger)  # tg_id є стовпцем типу BigInteger (велике ціле число)
+    id: Mapped[int] = mapped_column(primary_key=True)  # Первинний ключ
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)  # Telegram ID користувача
+    name: Mapped[str | None] = mapped_column(String, nullable=True)  # Ім'я користувача (може бути пустим)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: (datetime.utcnow() + timedelta(hours=3)).replace(microsecond=0))
+    click_count: Mapped[int] = mapped_column(Integer, default=0)  # Кількість викликів функцій бота
+    last_activity: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Дата останньої активності
 
 
 

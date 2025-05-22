@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 import app.keyboards as kb
 from app.handlers.states import GptState
 from app.utils import talk_person
+import app.database.requests as rq
 
 from ..logger import log_to_file
 import logging
@@ -23,6 +24,9 @@ def reset_talk_with_pers():
 async def talk(callback: CallbackQuery, state: FSMContext):
     log_to_file("TALK to Famous Person")  # Логуємо виклик функції
     logging.info(f"Користувач {callback.from_user.id} (@{callback.from_user.username}) викликав TALK to Famous Person")
+
+    await rq.update_user_activity(callback.from_user.id)  # Оновлюємо активність у БД
+
     await callback.answer()  # Підтверджуємо натискання кнопки
     image = FSInputFile('app/resources/images/talk_logo.png')  # Підготовлене зображення
     # Надсилаємо зображення
